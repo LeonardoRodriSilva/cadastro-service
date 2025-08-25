@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>DER Final - Sistema Nota Fiscal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .entity {
+            border: 3px solid #2c3e50;
+            border-radius: 12px;
+            background: #fff;
+            margin: 20px;
+            padding: 0;
+            min-width: 250px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .entity:hover {
+            transform: translateY(-5px);
+        }
+
+        .entity-header {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .entity-body {
+            padding: 20px;
+        }
+
+        .pk {
+            color: #e74c3c;
+            font-weight: bold;
+            background: #ffebee;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .fk {
+            color: #27ae60;
+            font-weight: bold;
+            background: #e8f5e8;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .attribute {
+            margin: 8px 0;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .type {
+            color: #7f8c8d;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .relationship {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .diagram {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            justify-items: center;
+            margin: 30px 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #34495e;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        .note {
+            background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+            border: 2px solid #f39c12;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .enum-values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .enum-value {
+            background: #3498db;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .highlight {
+            background: #e8f6ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .der-section {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .der-image {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #6c757d;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: white;
+            padding: 10px;
+        }
+
+        .section-divider span {
+            background: white;
+            padding: 0 20px;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🗄️ DER COMPLETO</h1>
+    <p style="text-align: center; font-size: 18px; color: #7f8c8d; margin-bottom: 40px;">
+        Sistema de Nota Fiscal - Modelo Entidade Relacionamento
+    </p>
+
+    <!-- DER CONCEITUAL DESENHADO -->
+    <h2>🎨 DER Conceitual - Versão Desenhada</h2>
+    <div class="der-section">
+        <p style="color: #6c757d; margin-bottom: 20px;">
+            <strong>Modelo conceitual desenvolvido manualmente</strong><br>
+            Demonstra a compreensão dos relacionamentos e estrutura das entidades
+        </p>
+        <img alt="DER Conceitual desenhado manualmente" class="der-image" src="DER.png"/>
+        <p style="margin-top: 15px; font-size: 14px; color: #6c757d;">
+            <em>DER original criado com notação clássica - Entidades, Relacionamentos e Cardinalidades</em>
+        </p>
+    </div>
+    <!-- DER IMPLEMENTAÇÃO -->
+    <h2>🏗️ DER de Implementação - Versão Final</h2>
+    <div class="diagram">
+        <!-- CLIENTE -->
+        <div class="entity">
+            <div class="entity-header">👤 CLIENTE</div>
+            <div class="entity-body">
+                <div class="attribute">
+                    <span><span class="pk">id</span></span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+                <div class="attribute">
+                    <span>nome</span>
+                    <span class="type">VARCHAR(255)</span>
+                </div>
+                <div class="attribute">
+                    <span>email</span>
+                    <span class="type">VARCHAR(255)</span>
+                </div>
+                <div class="attribute">
+                    <span>telefone</span>
+                    <span class="type">VARCHAR(20)</span>
+                </div>
+                <div class="attribute">
+                    <span>endereco</span>
+                    <span class="type">TEXT</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUTO -->
+        <div class="entity">
+            <div class="entity-header">📦 PRODUTO</div>
+            <div class="entity-body">
+                <div class="attribute">
+                    <span><span class="pk">id</span></span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+                <div class="attribute">
+                    <span>nome</span>
+                    <span class="type">VARCHAR(255)</span>
+                </div>
+                <div class="attribute">
+                    <span>preco</span>
+                    <span class="type">DECIMAL(10,2)</span>
+                </div>
+                <div class="attribute">
+                    <span>descricao</span>
+                    <span class="type">TEXT</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTA_FISCAL -->
+        <div class="entity">
+            <div class="entity-header">📄 NOTA_FISCAL</div>
+            <div class="entity-body">
+                <div class="attribute">
+                    <span><span class="pk">id</span></span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+                <div class="attribute">
+                    <span>numero</span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+                <div class="attribute">
+                    <span>data_emissao</span>
+                    <span class="type">DATE</span>
+                </div>
+                <div class="attribute">
+                    <span>status</span>
+                    <span class="type">ENUM</span>
+                </div>
+                <div class="attribute">
+                    <span><span class="fk">cliente_id</span></span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ITEM_NOTA_FISCAL -->
+        <div class="entity">
+            <div class="entity-header">📋 ITEM_NOTA_FISCAL</div>
+            <div class="entity-body">
+                <div class="attribute">
+                    <span><span class="pk">id</span></span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+                <div class="attribute">
+                    <span><span class="fk">nota_fiscal_id</span></span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+                <div class="attribute">
+                    <span><span class="fk">produto_id</span></span>
+                    <span class="type">VARCHAR(50)</span>
+                </div>
+                <div class="attribute">
+                    <span>nome_produto</span>
+                    <span class="type">VARCHAR(255)</span>
+                </div>
+                <div class="attribute">
+                    <span>preco_unitario</span>
+                    <span class="type">DECIMAL(10,2)</span>
+                </div>
+                <div class="attribute">
+                    <span>quantidade</span>
+                    <span class="type">INTEGER</span>
+                </div>
+                <div class="attribute">
+                    <span>valor_total</span>
+                    <span class="type">DECIMAL(10,2)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2>🔗 Relacionamentos</h2>
+
+    <div class="relationship">
+        <strong>CLIENTE</strong> (1) ←→ (N) <strong>NOTA_FISCAL</strong><br>
+        <small>Um cliente pode ter várias notas fiscais</small>
+    </div>
+
+    <div class="relationship">
+        <strong>NOTA_FISCAL</strong> (1) ←→ (N) <strong>ITEM_NOTA_FISCAL</strong><br>
+        <small>Uma nota fiscal pode ter vários itens</small>
+    </div>
+
+    <div class="relationship">
+        <strong>PRODUTO</strong> (1) ←→ (N) <strong>ITEM_NOTA_FISCAL</strong><br>
+        <small>Um produto pode aparecer em vários itens (histórico preservado)</small>
+    </div>
+
+    <h2>📊 Status da Nota Fiscal</h2>
+    <div class="note">
+        <strong>ENUM StatusNotaFiscal:</strong>
+        <div class="enum-values">
+            <span class="enum-value">PENDENTE</span>
+            <span class="enum-value">EMITIDA</span>
+            <span class="enum-value">CANCELADA</span>
+            <span class="enum-value">PAGA</span>
+        </div>
+    </div>
+
+    <h2>🔄 Evolução do Modelo</h2>
+    <div class="highlight">
+        <h3>📝 Do Conceito à Implementação</h3>
+        <ul>
+            <li><strong>Versão Conceitual:</strong> Foco nos relacionamentos e regras de negócio</li>
+            <li><strong>Versão de Implementação:</strong> Detalhamento técnico com tipos de dados</li>
+            <li><strong>Preservação Histórica:</strong> Campos adicionais para manter integridade temporal</li>
+            <li><strong>Otimização:</strong> Estrutura preparada para performance e escalabilidade</li>
+        </ul>
+    </div>
+
+    <h2>💡 Características Importantes</h2>
+
+    <div class="highlight">
+        <h3>🛡️ Integridade Histórica</h3>
+        <ul>
+            <li><strong>nome_produto:</strong> Preserva o nome do produto na época da venda</li>
+            <li><strong>preco_unitario:</strong> Mantém o preço praticado, não o atual</li>
+            <li><strong>valor_total:</strong> Calculado (quantidade × preço_unitario)</li>
+        </ul>
+    </div>
+
+    <div class="highlight">
+        <h3>🎯 Vantagens do Modelo</h3>
+        <ul>
+            <li>✅ <strong>Auditoria completa:</strong> Histórico nunca se perde</li>
+            <li>✅ <strong>Mudanças seguras:</strong> Alterar produto não afeta notas antigas</li>
+            <li>✅ <strong>Flexibilidade:</strong> Permite descontos e promoções por item</li>
+            <li>✅ <strong>Conformidade fiscal:</strong> Dados sempre consistentes</li>
+        </ul>
+    </div>
+
+    <div class="note">
+        <strong>🚀 Projeto Completo!</strong><br>
+        Este modelo demonstra a evolução completa: do conceito desenhado à implementação técnica final,
+        garantindo integridade total dos dados históricos e alinhamento perfeito com o código Java.
+    </div>
+</div>
+</body>
+</html>
