@@ -1,52 +1,40 @@
 package com;
 
 import com.config.RedisPublisher;
-import com.entity.Cliente;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.handler.ClienteHttpHandler;
 import com.repository.ClienteRepository;
 import com.service.ClienteService;
+import com.sun.net.httpserver.HttpServer;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
+import java.net.InetSocketAddress;
 
 @Slf4j
 public class Aplicacao {
 
-    public static void main(String[] args) {
-        log.info("INICIANDO A APLICAÇÃO DE CADASTRO...");
+    public static void main(String[] args) throws Exception {
+        log.info("### INICIANDO SERVIÇO DE CADASTROS ###");
 
         ClienteRepository clienteRepository = new ClienteRepository();
         RedisPublisher redisPublisher = new RedisPublisher();
-
-
+        ObjectMapper objectMapper = new ObjectMapper();
         ClienteService clienteService = new ClienteService(clienteRepository, redisPublisher);
+        ClienteHttpHandler clienteHandler = new ClienteHttpHandler(clienteService, objectMapper);
 
-        log.info("Serviços configurados. Pronto para operar.");
-        log.info("----------------------------------------------");
+        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        server.createContext("/api/clientes", clienteHandler);
+        server.setExecutor(null);
 
-
-        try {
-            log.info("Tentando criar um novo cliente...");
-
-            Cliente novoCliente = clienteService.criarCliente(
-                    "Ana Carolina",
-                    "ana.carolina@exemplo.com",
-                    "11987654321",
-                    "Avenida Paulista, 1000"
-            );
-
-            log.info("Cliente criado com sucesso! ID: {}", novoCliente.id());
-
-            log.info("\n Buscando cliente recém-criado...");
-            Optional<Cliente> clienteBuscado = clienteService.buscarPorId(novoCliente.id());
-            clienteBuscado.ifPresent(c -> log.info("✅ Cliente encontrado: {}", c.nome()));
-
-        } catch (Exception e) {
-            log.error("Ocorreu um erro na execução: {}", e.getMessage(), e);
-        } finally {
-            log.info("----------------------------------------------");
-            log.info("Encerrando recursos...");
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("\n DESLIGANDO SERVIÇO DE CADASTROS ");
+            server.stop(1);
             RedisPublisher.close();
-            log.info("Aplicação finalizada.");
-        }
+            log.info("Recursos liberados. Servidor desligado.");
+        }));
+
+        server.start();
+        log.info("Servidor rodando em http://localhost:8080");
+        log.info("Endpoint de Clientes disponível em /api/clientes");
     }
 }
