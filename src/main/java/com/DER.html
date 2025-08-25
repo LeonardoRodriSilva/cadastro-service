@@ -67,6 +67,16 @@
             border-radius: 4px;
         }
 
+        .ix {
+            color: #8e44ad;
+            font-weight: bold;
+            background: #f3e5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-size: 10px;
+        }
+
         .attribute {
             margin: 8px 0;
             font-size: 14px;
@@ -163,24 +173,15 @@
             background: white;
             padding: 10px;
         }
-
-        .section-divider span {
-            background: white;
-            padding: 0 20px;
-            color: #2c3e50;
-            font-weight: bold;
-            font-size: 18px;
-        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>🗄️ DER COMPLETO</h1>
     <p style="text-align: center; font-size: 18px; color: #7f8c8d; margin-bottom: 40px;">
-        Sistema de Nota Fiscal - Modelo Entidade Relacionamento
+        Sistema de Nota Fiscal - Modelo Entidade Relacionamento (Otimizado para Performance)
     </p>
 
-    <!-- DER CONCEITUAL DESENHADO -->
     <h2>🎨 DER Conceitual - Versão Desenhada</h2>
     <div class="der-section">
         <p style="color: #6c757d; margin-bottom: 20px;">
@@ -192,10 +193,8 @@
             <em>DER original criado com notação clássica - Entidades, Relacionamentos e Cardinalidades</em>
         </p>
     </div>
-    <!-- DER IMPLEMENTAÇÃO -->
     <h2>🏗️ DER de Implementação - Versão Final</h2>
     <div class="diagram">
-        <!-- CLIENTE -->
         <div class="entity">
             <div class="entity-header">👤 CLIENTE</div>
             <div class="entity-body">
@@ -222,7 +221,6 @@
             </div>
         </div>
 
-        <!-- PRODUTO -->
         <div class="entity">
             <div class="entity-header">📦 PRODUTO</div>
             <div class="entity-body">
@@ -245,7 +243,6 @@
             </div>
         </div>
 
-        <!-- NOTA_FISCAL -->
         <div class="entity">
             <div class="entity-header">📄 NOTA_FISCAL</div>
             <div class="entity-body">
@@ -254,25 +251,28 @@
                     <span class="type">VARCHAR(50)</span>
                 </div>
                 <div class="attribute">
-                    <span>numero</span>
+                    <span>numero<span class="ix">IX</span></span>
                     <span class="type">VARCHAR(50)</span>
                 </div>
                 <div class="attribute">
                     <span>data_emissao</span>
-                    <span class="type">DATE</span>
+                    <span class="type">TIMESTAMP</span>
                 </div>
                 <div class="attribute">
                     <span>status</span>
                     <span class="type">ENUM</span>
                 </div>
                 <div class="attribute">
-                    <span><span class="fk">cliente_id</span></span>
+                    <span>valor_total_nota</span>
+                    <span class="type">DECIMAL(10,2)</span>
+                </div>
+                <div class="attribute">
+                    <span><span class="fk">cliente_id</span><span class="ix">IX</span></span>
                     <span class="type">VARCHAR(50)</span>
                 </div>
             </div>
         </div>
 
-        <!-- ITEM_NOTA_FISCAL -->
         <div class="entity">
             <div class="entity-header">📋 ITEM_NOTA_FISCAL</div>
             <div class="entity-body">
@@ -281,11 +281,11 @@
                     <span class="type">VARCHAR(50)</span>
                 </div>
                 <div class="attribute">
-                    <span><span class="fk">nota_fiscal_id</span></span>
+                    <span><span class="fk">nota_fiscal_id</span><span class="ix">IX</span></span>
                     <span class="type">VARCHAR(50)</span>
                 </div>
                 <div class="attribute">
-                    <span><span class="fk">produto_id</span></span>
+                    <span><span class="fk">produto_id</span><span class="ix">IX</span></span>
                     <span class="type">VARCHAR(50)</span>
                 </div>
                 <div class="attribute">
@@ -309,20 +309,28 @@
     </div>
 
     <h2>🔗 Relacionamentos</h2>
-
     <div class="relationship">
         <strong>CLIENTE</strong> (1) ←→ (N) <strong>NOTA_FISCAL</strong><br>
         <small>Um cliente pode ter várias notas fiscais</small>
     </div>
-
     <div class="relationship">
         <strong>NOTA_FISCAL</strong> (1) ←→ (N) <strong>ITEM_NOTA_FISCAL</strong><br>
         <small>Uma nota fiscal pode ter vários itens</small>
     </div>
-
     <div class="relationship">
         <strong>PRODUTO</strong> (1) ←→ (N) <strong>ITEM_NOTA_FISCAL</strong><br>
         <small>Um produto pode aparecer em vários itens (histórico preservado)</small>
+    </div>
+
+    <h2>⚡ Índices de Performance</h2>
+    <div class="highlight">
+        <p>Para garantir consultas rápidas, especialmente em tabelas grandes, os seguintes índices são recomendados. Eles aceleram buscas (`SELECT`) e junções (`JOIN`).</p>
+        <ul>
+            <li><strong>NOTA_FISCAL(cliente_id):</strong> Essencial para buscar rapidamente todas as notas de um cliente específico.</li>
+            <li><strong>NOTA_FISCAL(numero):</strong> Permite encontrar uma nota fiscal pelo seu número de forma instantânea.</li>
+            <li><strong>ITEM_NOTA_FISCAL(nota_fiscal_id):</strong> Fundamental para carregar todos os itens de uma nota fiscal de maneira eficiente.</li>
+            <li><strong>ITEM_NOTA_FISCAL(produto_id):</strong> Útil para relatórios que precisam encontrar todas as vendas de um determinado produto.</li>
+        </ul>
     </div>
 
     <h2>📊 Status da Nota Fiscal</h2>
@@ -336,43 +344,26 @@
         </div>
     </div>
 
-    <h2>🔄 Evolução do Modelo</h2>
-    <div class="highlight">
-        <h3>📝 Do Conceito à Implementação</h3>
-        <ul>
-            <li><strong>Versão Conceitual:</strong> Foco nos relacionamentos e regras de negócio</li>
-            <li><strong>Versão de Implementação:</strong> Detalhamento técnico com tipos de dados</li>
-            <li><strong>Preservação Histórica:</strong> Campos adicionais para manter integridade temporal</li>
-            <li><strong>Otimização:</strong> Estrutura preparada para performance e escalabilidade</li>
-        </ul>
-    </div>
-
-    <h2>💡 Características Importantes</h2>
+    <h2>💡 Características Importantes </h2>
 
     <div class="highlight">
         <h3>🛡️ Integridade Histórica</h3>
         <ul>
-            <li><strong>nome_produto:</strong> Preserva o nome do produto na época da venda</li>
-            <li><strong>preco_unitario:</strong> Mantém o preço praticado, não o atual</li>
-            <li><strong>valor_total:</strong> Calculado (quantidade × preço_unitario)</li>
+            <li><strong>nome_produto:</strong> Preserva o nome do produto na época da venda.</li>
+            <li><strong>preco_unitario:</strong> Mantém o preço praticado, não o atual.</li>
+            <li><strong>valor_total (item):</strong> Calculado (quantidade × preco_unitario) e armazenado para consistência.</li>
         </ul>
     </div>
 
     <div class="highlight">
-        <h3>🎯 Vantagens do Modelo</h3>
+        <h3>🎯 Performance e Escalabilidade</h3>
         <ul>
-            <li>✅ <strong>Auditoria completa:</strong> Histórico nunca se perde</li>
-            <li>✅ <strong>Mudanças seguras:</strong> Alterar produto não afeta notas antigas</li>
-            <li>✅ <strong>Flexibilidade:</strong> Permite descontos e promoções por item</li>
-            <li>✅ <strong>Conformidade fiscal:</strong> Dados sempre consistentes</li>
+            <li><strong>Valor_total_nota:</strong> Campo desnormalizado que armazena a soma dos itens, evitando cálculos repetitivos e caros em tempo de consulta.</li>
+            <li><strong>Índices Estratégicos:</strong> Garantem que as operações de busca e junção mais comuns sejam executadas com máxima velocidade.</li>
+            <li><strong>Precisão de Auditoria:</strong> O uso de <code>TIMESTAMP</code> em <code>data_emissao</code> permite rastrear o momento exato da transação.</li>
         </ul>
     </div>
 
-    <div class="note">
-        <strong>🚀 Projeto Completo!</strong><br>
-        Este modelo demonstra a evolução completa: do conceito desenhado à implementação técnica final,
-        garantindo integridade total dos dados históricos e alinhamento perfeito com o código Java.
-    </div>
 </div>
 </body>
 </html>
