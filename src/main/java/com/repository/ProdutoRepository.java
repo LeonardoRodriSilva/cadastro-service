@@ -9,12 +9,12 @@ import com.mongodb.client.result.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.Decimal128;
-import org.bson.types.ObjectId;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 public class ProdutoRepository {
@@ -30,26 +30,23 @@ public class ProdutoRepository {
     }
 
     public Produto criar(Produto produto) {
+        String novoId = UUID.randomUUID().toString();
+
         Document doc = new Document()
+                .append(ID, novoId)
                 .append(NOME, produto.nome())
-                .append(PRECO, new Decimal128(produto.preco())) // Salva como Decimal128
+                .append(PRECO, new Decimal128(produto.preco()))
                 .append(DESCRICAO, produto.descricao());
 
         collection.insertOne(doc);
-        String id = doc.getObjectId(ID).toString();
 
-        log.info("Produto criado no MongoDB com ID: {}", id);
-        return new Produto(id, produto.nome(), produto.preco(), produto.descricao());
+        log.info("Produto criado no MongoDB com ID: {}", novoId);
+        return new Produto(novoId, produto.nome(), produto.preco(), produto.descricao());
     }
 
     public Optional<Produto> buscarPorId(String id) {
-        if (!ObjectId.isValid(id)) {
-            log.warn("Tentativa de busca com ID inválido: {}", id);
-            return Optional.empty();
-        }
-
         try {
-            Document doc = collection.find(Filters.eq(ID, new ObjectId(id))).first();
+            Document doc = collection.find(Filters.eq(ID, id)).first();
             return Optional.ofNullable(doc).map(this::documentToProduto);
         } catch (Exception e) {
             log.error("Erro ao buscar produto por ID: {}", id, e);
@@ -66,15 +63,15 @@ public class ProdutoRepository {
     }
 
     public boolean atualizar(Produto produto) {
-        if (produto.id() == null || !ObjectId.isValid(produto.id())) {
-            log.error("ID inválido ou nulo para atualização: {}", produto.id());
+        if (produto.id() == null) {
+            log.error("ID nulo para atualização");
             return false;
         }
 
-        Document filtro = new Document(ID, new ObjectId(produto.id()));
+        Document filtro = new Document(ID, produto.id());
         Document update = new Document("$set", new Document()
                 .append(NOME, produto.nome())
-                .append(PRECO, new Decimal128(produto.preco())) // Atualiza como Decimal128
+                .append(PRECO, new Decimal128(produto.preco()))
                 .append(DESCRICAO, produto.descricao()));
 
         UpdateResult result = collection.updateOne(filtro, update);
@@ -89,13 +86,8 @@ public class ProdutoRepository {
     }
 
     public boolean deletar(String id) {
-        if (!ObjectId.isValid(id)) {
-            log.warn("Tentativa de deleção com ID inválido: {}", id);
-            return false;
-        }
-
         try {
-            DeleteResult result = collection.deleteOne(Filters.eq(ID, new ObjectId(id)));
+            DeleteResult result = collection.deleteOne(Filters.eq(ID, id));
             return result.getDeletedCount() > 0;
         } catch (Exception e) {
             log.error("Erro ao deletar produto: {}", id, e);
@@ -107,7 +99,7 @@ public class ProdutoRepository {
         Decimal128 precoDecimal = doc.get(PRECO, Decimal128.class);
 
         return new Produto(
-                doc.getObjectId(ID).toString(),
+                doc.getString(ID),
                 doc.getString(NOME),
                 precoDecimal != null ? precoDecimal.bigDecimalValue() : BigDecimal.ZERO,
                 doc.getString(DESCRICAO)
