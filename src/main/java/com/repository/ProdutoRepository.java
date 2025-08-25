@@ -1,116 +1,116 @@
 package com.repository;
 
-import com.config.PostgresConfig;
+import com.config.MongoConfig;
 import com.entity.Produto;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.bson.types.Decimal128;
+import org.bson.types.ObjectId;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class ProdutoRepository {
 
-    public Produto salvar(Produto produto) throws SQLException {
-        if (produto.id() != null) {
-            return atualizar(produto);
+    private static final String ID = "_id";
+    private static final String NOME = "nome";
+    private static final String PRECO = "preco";
+    private static final String DESCRICAO = "descricao";
+    private final MongoCollection<Document> collection;
+
+    public ProdutoRepository() {
+        this.collection = MongoConfig.getDatabase().getCollection("produtos");
+    }
+
+    public Produto criar(Produto produto) {
+        Document doc = new Document()
+                .append(NOME, produto.nome())
+                .append(PRECO, new Decimal128(produto.preco())) // Salva como Decimal128
+                .append(DESCRICAO, produto.descricao());
+
+        collection.insertOne(doc);
+        String id = doc.getObjectId(ID).toString();
+
+        log.info("Produto criado no MongoDB com ID: {}", id);
+        return new Produto(id, produto.nome(), produto.preco(), produto.descricao());
+    }
+
+    public Optional<Produto> buscarPorId(String id) {
+        if (!ObjectId.isValid(id)) {
+            log.warn("Tentativa de busca com ID inválido: {}", id);
+            return Optional.empty();
         }
 
-        String sql = "INSERT INTO produtos (nome, preco, descricao) " +
-                "VALUES (?, ?, ?) RETURNING id";
-
-        try(Connection connection = PostgresConfig.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setString(1, produto.nome());
-            preparedStatement.setBigDecimal(2, produto.preco());
-            preparedStatement.setString(3, produto.descricao());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    Long novoId = rs.getLong("id");
-                    return new Produto(novoId, produto.nome(),
-                            produto.preco(), produto.descricao());
-                }
-                throw new SQLException("Falha ao obter ID gerado");
-            }
-
+        try {
+            Document doc = collection.find(Filters.eq(ID, new ObjectId(id))).first();
+            return Optional.ofNullable(doc).map(this::documentToProduto);
+        } catch (Exception e) {
+            log.error("Erro ao buscar produto por ID: {}", id, e);
+            return Optional.empty();
         }
     }
 
-    public Optional<Produto> buscarPorId(Long id) throws SQLException {
-        String sql = "SELECT id, nome, preco, descricao FROM produtos WHERE id = ?";
-        try (Connection connection = PostgresConfig.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setLong(1, id);
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    Produto produto = new Produto(
-                            rs.getLong("id"),
-                            rs.getString("nome"),
-                            rs.getBigDecimal("preco"),
-                            rs.getString("descricao"));
-                    return Optional.of(produto);
-                }
-            }
+    public List<Produto> listarTodos() {
+        List<Produto> produtos = new ArrayList<>();
+        for (Document doc : collection.find()) {
+            produtos.add(documentToProduto(doc));
         }
-        return Optional.empty();
+        return produtos;
     }
 
-    public List<Produto> listarTodos() throws SQLException {
-        String sql = "SELECT id, nome, preco, descricao FROM produtos ORDER BY id";
-
-        try (Connection connection = PostgresConfig.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-             try (ResultSet rs = preparedStatement.executeQuery()){
-
-                List<Produto> produtos = new java.util.ArrayList<>();
-                while (rs.next()) {
-                    Produto produto = new Produto(
-                            rs.getLong("id"),
-                            rs.getString("nome"),
-                            rs.getBigDecimal("preco"),
-                            rs.getString("descricao"));
-                    produtos.add(produto);
-                }
-                return produtos;
-            }
+    public boolean atualizar(Produto produto) {
+        if (produto.id() == null || !ObjectId.isValid(produto.id())) {
+            log.error("ID inválido ou nulo para atualização: {}", produto.id());
+            return false;
         }
+
+        Document filtro = new Document(ID, new ObjectId(produto.id()));
+        Document update = new Document("$set", new Document()
+                .append(NOME, produto.nome())
+                .append(PRECO, new Decimal128(produto.preco())) // Atualiza como Decimal128
+                .append(DESCRICAO, produto.descricao()));
+
+        UpdateResult result = collection.updateOne(filtro, update);
+        boolean foiAtualizado = result.getModifiedCount() > 0;
+
+        if (foiAtualizado) {
+            log.info("Produto atualizado no MongoDB: {}", produto.id());
+        } else {
+            log.warn("Nenhum produto foi atualizado com o ID: {}", produto.id());
+        }
+        return foiAtualizado;
     }
 
-    public Produto atualizar(Produto produto) throws SQLException {
-        String sql = "UPDATE produtos SET nome = ?, preco = ?, descricao = ? " +
-                "WHERE id = ?";
+    public boolean deletar(String id) {
+        if (!ObjectId.isValid(id)) {
+            log.warn("Tentativa de deleção com ID inválido: {}", id);
+            return false;
+        }
 
-        try (Connection connection = PostgresConfig.getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setString(1, produto.nome());
-            preparedStatement.setBigDecimal(2, produto.preco());
-            preparedStatement.setString(3, produto.descricao());
-            preparedStatement.setLong(4, produto.id());
-
-            int linhasAfetadas = preparedStatement.executeUpdate();
-            if (linhasAfetadas == 0) {
-                throw new SQLException("Falha ao atualizar produto");
-            }
-            return produto;
+        try {
+            DeleteResult result = collection.deleteOne(Filters.eq(ID, new ObjectId(id)));
+            return result.getDeletedCount() > 0;
+        } catch (Exception e) {
+            log.error("Erro ao deletar produto: {}", id, e);
+            return false;
         }
     }
 
-    public boolean deletar(Long id) throws SQLException {
-        String sql = "DELETE FROM produtos WHERE id = ?";
+    private Produto documentToProduto(Document doc) {
+        Decimal128 precoDecimal = doc.get(PRECO, Decimal128.class);
 
-        try (Connection connection = PostgresConfig.getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setLong(1, id);
-
-            int linhasAfetadas = preparedStatement.executeUpdate();
-            return linhasAfetadas > 0;
-        }
+        return new Produto(
+                doc.getObjectId(ID).toString(),
+                doc.getString(NOME),
+                precoDecimal != null ? precoDecimal.bigDecimalValue() : BigDecimal.ZERO,
+                doc.getString(DESCRICAO)
+        );
     }
 }

@@ -1,11 +1,10 @@
 package com.service;
 
 import com.entity.Produto;
-import com.exception.DataAccessException;
 import com.repository.ProdutoRepository;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public class ProdutoService {
@@ -17,30 +16,36 @@ public class ProdutoService {
     }
 
     public Produto criarProduto(String nome, BigDecimal preco, String descricao) {
-
-        try {
-            if (nome == null || nome.trim().isEmpty()) {
-                throw new IllegalArgumentException("Nome do produto não pode ser vazio");
-            }
-            if (preco == null || preco.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Preço do produto deve ser maior que zero");
-            }
-
-            Produto produto = Produto.novo(nome, preco, descricao);
-            return produtoRepository.salvar(produto);
-        } catch (SQLException e) {
-            throw new DataAccessException("Erro ao salvar produto: " + e.getMessage(), e);
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do produto não pode ser vazio");
         }
+        if (preco == null || preco.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Preço do produto deve ser maior que zero");
+        }
+
+        Produto produto = Produto.novo(nome, preco, descricao);
+        return produtoRepository.criar(produto); // Chama o novo método criar
     }
 
-    public Optional<Produto> buscarPorId(Long id) {
-        try {
-            if (id == null || id <= 0) {
-                throw new IllegalArgumentException("ID deve ser maior que zero");
-            }
-            return produtoRepository.buscarPorId(id);
-        } catch (SQLException e) {
-            throw new DataAccessException("Erro ao buscar produto: " + e.getMessage(), e);
+    public Optional<Produto> buscarPorId(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("ID não pode ser nulo ou vazio");
         }
+        return produtoRepository.buscarPorId(id);
+    }
+
+    public List<Produto> listarTodosProdutos() {
+        return produtoRepository.listarTodos();
+    }
+
+    public boolean atualizarProduto(Produto produto) {
+        return produtoRepository.atualizar(produto);
+    }
+
+    public boolean deletarProduto(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("ID não pode ser nulo ou vazio");
+        }
+        return produtoRepository.deletar(id);
     }
 }
