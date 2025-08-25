@@ -1,5 +1,6 @@
 package com.service;
 
+import com.config.RedisPublisher;
 import com.entity.Cliente;
 import com.exception.DataAccessException;
 import com.repository.ClienteRepository;
@@ -11,9 +12,11 @@ import java.util.Optional;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final RedisPublisher redisPublisher;
 
-    public ClienteService(ClienteRepository clienteRepository) {
+    public ClienteService(ClienteRepository clienteRepository, RedisPublisher redisPublisher) {
         this.clienteRepository = clienteRepository;
+        this.redisPublisher = redisPublisher;
     }
 
     public Cliente criarCliente(String nome, String email, String telefone,
@@ -27,7 +30,13 @@ public class ClienteService {
             }
 
             Cliente cliente = Cliente.novo(nome, email, telefone, endereco);
-            return clienteRepository.salvar(cliente);
+            Cliente clienteSalvo = clienteRepository.salvar(cliente);
+
+            if (clienteSalvo != null) {
+                redisPublisher.publish("clientes-topic", clienteSalvo);
+            }
+
+            return clienteSalvo;
         } catch (SQLException e) {
             throw new DataAccessException("Erro ao salvar cliente: " + e.getMessage(), e);
         }

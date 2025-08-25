@@ -12,6 +12,8 @@ repositories {
 dependencies {
     implementation 'org.postgresql:postgresql:42.6.0'
     implementation 'org.mongodb:mongodb-driver-sync:4.11.1'
+    implementation 'redis.clients:jedis:5.1.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
 
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
