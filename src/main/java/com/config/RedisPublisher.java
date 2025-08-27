@@ -1,11 +1,11 @@
 package com.config;
 
+import com.exception.RedisConfigException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisPubSub;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import java.util.Properties;
 @Slf4j
 public class RedisPublisher {
 
-    private static JedisPool jedisPool;
+    private static final JedisPool jedisPool;
     private final ObjectMapper objectMapper;
 
     static {
@@ -34,13 +34,14 @@ public class RedisPublisher {
 
         } catch (IOException | NumberFormatException e) {
             log.error("Falha ao inicializar o publisher do Redis", e);
-            throw new RuntimeException("Não foi possível configurar a conexão com o Redis", e);
+            throw new RedisConfigException("Não foi possível configurar a conexão com o Redis", e);
         }
     }
 
     public RedisPublisher() {
         this.objectMapper = new ObjectMapper();
     }
+
     public void publish(String topic, Object messageObject) {
         try (Jedis jedis = jedisPool.getResource()) {
             String messageJson = objectMapper.writeValueAsString(messageObject);
