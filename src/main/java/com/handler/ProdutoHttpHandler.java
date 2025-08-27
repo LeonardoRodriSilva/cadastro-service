@@ -27,6 +27,8 @@ public class ProdutoHttpHandler implements HttpHandler {
     private static final String METHOD_PUT = "PUT";
     private static final String METHOD_DELETE = "DELETE";
 
+    private static final String ID_INVALIDO = "Produto com ID";
+
     private final ProdutoService produtoService;
     private final ObjectMapper objectMapper;
 
@@ -105,7 +107,7 @@ public class ProdutoHttpHandler implements HttpHandler {
             sendResponse(exchange, 200, responseJson);
         } else {
             log.warn("Produto com ID {} não foi encontrado.", id);
-            sendResponse(exchange, 404, createErrorResponse("Produto com ID " + id + " não encontrado"));
+            sendResponse(exchange, 404, createErrorResponse(ID_INVALIDO + id + " não encontrado"));
         }
     }
 
@@ -122,7 +124,7 @@ public class ProdutoHttpHandler implements HttpHandler {
             sendResponse(exchange, 200, responseJson);
         } else {
             log.warn("Produto com ID {} não foi encontrado para atualização.", id);
-            sendResponse(exchange, 404, createErrorResponse("Produto com ID " + id + " não encontrado para atualização"));
+            sendResponse(exchange, 404, createErrorResponse(ID_INVALIDO + id + " não encontrado para atualização"));
         }
     }
 
@@ -135,7 +137,7 @@ public class ProdutoHttpHandler implements HttpHandler {
             sendResponse(exchange, 204, "");
         } else {
             log.warn("Falha ao deletar produto com ID {}. Não foi encontrado.", id);
-            sendResponse(exchange, 404, createErrorResponse("Produto com ID " + id + " não encontrado para deleção"));
+            sendResponse(exchange, 404, createErrorResponse(ID_INVALIDO + id + " não encontrado para deleção"));
         }
     }
 
