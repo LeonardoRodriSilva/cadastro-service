@@ -2,7 +2,6 @@ package com.service;
 
 import com.entity.Produto;
 import com.repository.ProdutoRepository;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +21,6 @@ public class ProdutoService {
         if (preco == null || preco.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Preço do produto deve ser maior que zero");
         }
-
         Produto produto = Produto.novo(nome, preco, descricao);
         return produtoRepository.criar(produto);
     }
@@ -38,8 +36,19 @@ public class ProdutoService {
         return produtoRepository.listarTodos();
     }
 
-    public boolean atualizarProduto(Produto produto) {
-        return produtoRepository.atualizar(produto);
+    public Optional<Produto> atualizarProduto(String id, String novoNome, BigDecimal novoPreco, String novaDescricao) {
+        Optional<Produto> produtoExistenteOpt = produtoRepository.buscarPorId(id);
+
+        if (produtoExistenteOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Produto produtoExistente = produtoExistenteOpt.get();
+        Produto produtoAtualizado = produtoExistente.atualizar(novoNome, novoPreco, novaDescricao);
+
+        boolean sucesso = produtoRepository.atualizar(produtoAtualizado);
+
+        return sucesso ? Optional.of(produtoAtualizado) : Optional.empty();
     }
 
     public boolean deletarProduto(String id) {

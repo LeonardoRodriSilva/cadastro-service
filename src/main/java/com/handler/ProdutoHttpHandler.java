@@ -116,15 +116,16 @@ public class ProdutoHttpHandler implements HttpHandler {
         log.info("Recebida requisição PUT para {}/{}", API_PRODUTOS_PATH, id);
         InputStream requestBody = exchange.getRequestBody();
         ProdutoDTO dto = objectMapper.readValue(requestBody, ProdutoDTO.class);
-        Produto produtoParaAtualizar = new Produto(id, dto.nome(), dto.preco(), dto.descricao());
-        boolean atualizado = produtoService.atualizarProduto(produtoParaAtualizar);
-        if (atualizado) {
+
+        Optional<Produto> produtoAtualizadoOpt = produtoService.atualizarProduto(id, dto.nome(), dto.preco(), dto.descricao());
+
+        if (produtoAtualizadoOpt.isPresent()) {
             log.info("Produto com ID {} atualizado com sucesso.", id);
-            String responseJson = objectMapper.writeValueAsString(produtoParaAtualizar);
+            String responseJson = objectMapper.writeValueAsString(produtoAtualizadoOpt.get());
             sendResponse(exchange, 200, responseJson);
         } else {
             log.warn("Produto com ID {} não foi encontrado para atualização.", id);
-            sendResponse(exchange, 404, createErrorResponse(ID_INVALIDO + id + " não encontrado para atualização"));
+            sendResponse(exchange, 404, createErrorResponse("Produto com ID " + id + " não encontrado para atualização"));
         }
     }
 
