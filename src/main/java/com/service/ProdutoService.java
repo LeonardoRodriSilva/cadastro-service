@@ -24,7 +24,7 @@ public class ProdutoService {
         }
 
         Produto produto = Produto.novo(nome, preco, descricao);
-        return produtoRepository.criar(produto); // Chama o novo método criar
+        return produtoRepository.criar(produto);
     }
 
     public Optional<Produto> buscarPorId(String id) {

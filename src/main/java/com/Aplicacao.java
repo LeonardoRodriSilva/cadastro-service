@@ -41,7 +41,7 @@ public class Aplicacao {
         }));
 
         server.start();
-        log.info("🚀 Servidor 'na mão' rodando em http://localhost:8080");
+        log.info("Servidor rodando em http://localhost:8080");
         log.info("Endpoints disponíveis: /api/clientes, /api/produtos");
         log.info("Pressione Ctrl+C para parar.");
     }

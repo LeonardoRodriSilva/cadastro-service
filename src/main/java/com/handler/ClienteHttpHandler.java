@@ -27,6 +27,8 @@ public class ClienteHttpHandler implements HttpHandler {
     private static final String METHOD_PUT = "PUT";
     private static final String METHOD_DELETE = "DELETE";
 
+    private static final String ID_INVALIDO = "ID inválido na requisição: {}";
+
     private final ClienteService clienteService;
     private final ObjectMapper objectMapper;
 
@@ -109,8 +111,8 @@ public class ClienteHttpHandler implements HttpHandler {
                 sendResponse(exchange, 404, createErrorResponse("Cliente com ID " + id + " não encontrado"));
             }
         } catch (NumberFormatException e) {
-            log.warn("ID inválido na requisição: {}", exchange.getRequestURI().getPath());
-            sendResponse(exchange, 400, createErrorResponse("ID do cliente deve ser numérico."));
+            log.warn(ID_INVALIDO, exchange.getRequestURI().getPath());
+            sendResponse(exchange, 400, createErrorResponse("ID do cliente deve ser numérico"));
         }
     }
 
@@ -125,7 +127,7 @@ public class ClienteHttpHandler implements HttpHandler {
             log.info("Cliente com ID {} atualizado com sucesso.", id);
             sendResponse(exchange, 200, responseJson);
         } catch (NumberFormatException e) {
-            log.warn("ID inválido na requisição: {}", exchange.getRequestURI().getPath());
+            log.warn(ID_INVALIDO, exchange.getRequestURI().getPath());
             sendResponse(exchange, 400, createErrorResponse("ID do cliente deve ser numérico."));
         }
     }
@@ -143,7 +145,7 @@ public class ClienteHttpHandler implements HttpHandler {
                 sendResponse(exchange, 404, createErrorResponse("Cliente com ID " + id + " não encontrado para deleção"));
             }
         } catch (NumberFormatException e) {
-            log.warn("ID inválido na requisição: {}", exchange.getRequestURI().getPath());
+            log.warn(ID_INVALIDO, exchange.getRequestURI().getPath());
             sendResponse(exchange, 400, createErrorResponse("ID do cliente deve ser numérico."));
         }
     }
