@@ -19,24 +19,20 @@ public class Aplicacao {
     public static void main(String[] args) throws Exception {
         log.info("### INICIANDO SERVIÇO DE CADASTROS (NA UNHA) ###");
 
-        // === Peças do Cliente ===
         ClienteRepository clienteRepository = new ClienteRepository();
         RedisPublisher redisPublisher = new RedisPublisher();
         ClienteService clienteService = new ClienteService(clienteRepository, redisPublisher);
         ClienteHttpHandler clienteHandler = new ClienteHttpHandler(clienteService, new ObjectMapper());
 
-        // === Peças do Produto ===
         ProdutoRepository produtoRepository = new ProdutoRepository();
         ProdutoService produtoService = new ProdutoService(produtoRepository);
         ProdutoHttpHandler produtoHandler = new ProdutoHttpHandler(produtoService, new ObjectMapper());
 
-        // === Configuração do Servidor ===
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
         server.createContext("/api/clientes", clienteHandler);
         server.createContext("/api/produtos", produtoHandler); // <-- REGISTRAMOS A NOVA ROTA
         server.setExecutor(null);
 
-        // ... Gancho de Desligamento (Shutdown Hook) ...
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("\n### DESLIGANDO SERVIÇO DE CADASTROS ###");
             server.stop(1);
