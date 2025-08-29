@@ -103,4 +103,18 @@ public class ClienteService {
             throw new DataAccessException("Erro ao deletar cliente: " + e.getMessage(), e);
         }
     }
+
+    public void atualizarEmailCliente(Long id, String novoEmail) {
+        try {
+            if (id == null || id <= 0) {
+                throw new IllegalArgumentException("ID do cliente é inválido");
+            }
+            if (novoEmail == null || novoEmail.trim().isEmpty() || !novoEmail.contains("@")) {
+                throw new IllegalArgumentException("O novo e-mail fornecido é inválido");
+            }
+            clienteRepository.atualizarEmailComProcedure(id, novoEmail);
+        } catch (SQLException e) {
+            throw new DataAccessException("Erro ao atualizar e-mail via procedure: " + e.getMessage(), e);
+        }
+    }
 }

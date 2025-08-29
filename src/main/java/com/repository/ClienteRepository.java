@@ -3,6 +3,7 @@ package com.repository;
 import com.config.PostgresConfig;
 import com.entity.Cliente;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -120,6 +121,19 @@ public class ClienteRepository {
 
             int linhasAfetadas = preparedStatement.executeUpdate();
             return linhasAfetadas > 0;
+        }
+    }
+
+    public void atualizarEmailComProcedure(Long clientId, String novoEmail) throws SQLException {
+        String sql = "CALL sp_atualizar_email_cliente(?, ?)";
+
+        try (Connection connection = PostgresConfig.getConnection();
+             CallableStatement callableStatement = connection.prepareCall(sql)) {
+
+            callableStatement.setLong(1, clientId);
+            callableStatement.setString(2, novoEmail);
+
+            callableStatement.execute();
         }
     }
 }

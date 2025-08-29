@@ -1,5 +1,6 @@
 package com.handler;
 
+import com.dto.AtualizarEmailDTO;
 import com.dto.ClienteDTO;
 import com.entity.Cliente;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +29,7 @@ public class ClienteHttpHandler implements HttpHandler {
     private static final String METHOD_DELETE = "DELETE";
 
     private static final String ID_INVALIDO = "ID inválido na requisição: {}";
+    private static final String ID_NUMERICO = "ID do cliente deve ser numérico.";
 
     private final ClienteService clienteService;
     private final ObjectMapper objectMapper;
@@ -57,7 +59,9 @@ public class ClienteHttpHandler implements HttpHandler {
                     }
                     break;
                 case METHOD_PUT:
-                    if (path.startsWith(API_CLIENTES_PREFIX)) {
+                    if (path.matches("/api/clientes/\\d+/email")) {
+                        handlePutEmailCliente(exchange);
+                    } else if (path.startsWith(API_CLIENTES_PREFIX)) {
                         handlePutCliente(exchange);
                     }
                     break;
@@ -112,7 +116,7 @@ public class ClienteHttpHandler implements HttpHandler {
             }
         } catch (NumberFormatException e) {
             log.warn(ID_INVALIDO, exchange.getRequestURI().getPath());
-            sendResponse(exchange, 400, createErrorResponse("ID do cliente deve ser numérico"));
+            sendResponse(exchange, 400, createErrorResponse(ID_NUMERICO));
         }
     }
 
@@ -128,7 +132,7 @@ public class ClienteHttpHandler implements HttpHandler {
             sendResponse(exchange, 200, responseJson);
         } catch (NumberFormatException e) {
             log.warn(ID_INVALIDO, exchange.getRequestURI().getPath());
-            sendResponse(exchange, 400, createErrorResponse("ID do cliente deve ser numérico."));
+            sendResponse(exchange, 400, createErrorResponse(ID_NUMERICO));
         }
     }
 
@@ -146,16 +150,40 @@ public class ClienteHttpHandler implements HttpHandler {
             }
         } catch (NumberFormatException e) {
             log.warn(ID_INVALIDO, exchange.getRequestURI().getPath());
-            sendResponse(exchange, 400, createErrorResponse("ID do cliente deve ser numérico."));
+            sendResponse(exchange, 400, createErrorResponse(ID_NUMERICO));
+        }
+    }
+
+    private void handlePutEmailCliente(HttpExchange exchange) throws IOException {
+        try {
+            String path = exchange.getRequestURI().getPath();
+            String idStr = path.substring(API_CLIENTES_PREFIX.length()).replace("/email", "");
+            Long id = Long.valueOf(idStr);
+
+            log.info("Recebida requisição PUT para /api/clientes/{}/email", id);
+
+            InputStream requestBody = exchange.getRequestBody();
+            AtualizarEmailDTO dto = objectMapper.readValue(requestBody, AtualizarEmailDTO.class);
+
+            clienteService.atualizarEmailCliente(id, dto.novoEmail());
+
+            sendResponse(exchange, 204, "");
+        } catch (NumberFormatException e) {
+            log.warn(ID_INVALIDO, exchange.getRequestURI().getPath());
+            sendResponse(exchange, 400, createErrorResponse(ID_NUMERICO));
         }
     }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String responseBody) throws IOException {
-        exchange.getResponseHeaders().set(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
-        byte[] responseBytes = responseBody.getBytes(StandardCharsets.UTF_8);
-        exchange.sendResponseHeaders(statusCode, responseBytes.length);
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(responseBytes);
+        if (statusCode == 204) {
+            exchange.sendResponseHeaders(statusCode, -1);
+        } else {
+            exchange.getResponseHeaders().set(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
+            byte[] responseBytes = responseBody.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(statusCode, responseBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(responseBytes);
+            }
         }
     }
 
