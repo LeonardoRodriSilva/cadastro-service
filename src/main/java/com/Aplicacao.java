@@ -17,7 +17,7 @@ import java.net.InetSocketAddress;
 public class Aplicacao {
 
     public static void main(String[] args) throws Exception {
-        log.info("### INICIANDO SERVIÇO DE CADASTROS (NA UNHA) ###");
+        log.info("### INICIANDO SERVIÇO DE CADASTROS ###");
 
         ClienteRepository clienteRepository = new ClienteRepository();
         RedisPublisher redisPublisher = new RedisPublisher();
